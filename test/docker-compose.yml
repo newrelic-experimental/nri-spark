@@ -1,0 +1,41 @@
+version: "3.3"
+services:
+  spark-master:
+    image: spark-master:2.3.1
+    container_name: spark-master
+    hostname: spark-master
+    ports:
+      - "8080:8080"
+      - "8088:8088"
+    networks: 
+      spark-network:
+        ipv4_address: 172.20.0.2
+    volumes:
+       - /opt/spark-apps:/opt/spark-apps
+       - /opt/spark-data:/opt/spark-data
+    environment:
+      - "SPARK_LOCAL_IP=spark-master"
+  spark-worker-1:
+    image: spark-worker:2.3.1
+    container_name: spark-worker-1
+    hostname: localhost
+    depends_on:
+      - spark-master
+    ports:
+      - "8081:8081"
+      - "18180:18080"
+      - "4040:4040"
+    env_file: ./env/spark-worker.sh
+    networks: 
+      spark-network:
+        ipv4_address: 172.20.0.3
+    volumes:
+       - /opt/spark-apps:/opt/spark-apps
+       - /opt/spark-data:/opt/spark-data
+networks:
+  spark-network:
+    driver: bridge
+    ipam:
+     driver: default
+     config:
+       - subnet: 172.20.0.0/24

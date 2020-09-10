@@ -1,0 +1,9 @@
+
+ ./bin/spark-submit \
+  --class org.apache.spark.examples.SparkPi \
+  --master spark://spark-master:7077 \
+  --num-executors 4 \
+  --executor-memory 1G \
+  --total-executor-cores 1 \
+  /spark/examples/jars/spark-examples_2.11-2.4.5.jar \
+  100

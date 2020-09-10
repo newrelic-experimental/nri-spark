@@ -1,0 +1,12 @@
+[Unit]
+Description=New Relic Spark Metric
+
+[Service]
+WorkingDirectory=/etc/nri-spark-metric
+RuntimeDirectory=/etc/nri-spark-metric
+Type=simple
+ExecStart=/etc/nri-spark-metric/nr-spark-metric
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

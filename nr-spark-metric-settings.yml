@@ -1,0 +1,4 @@
+sparkmasterurl: "http://localhost:8080"
+clustername:  mylocalcluster
+insightsapikey: NRII-XXXXXXXXXXX
+pollinterval: 5

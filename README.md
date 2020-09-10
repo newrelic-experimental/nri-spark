@@ -1,38 +1,123 @@
 [![Experimental Project header](https://github.com/newrelic/opensource-website/raw/master/src/images/categories/Experimental.png)](https://opensource.newrelic.com/oss-category/#experimental)
 
-# [Name of Project] [build badges go here when available]
+# New Relic Infrastructure Integration for Apache Spark 
 
->[Brief description - what is the project and value does it provide? How often should users expect to get releases? How is versioning set up? Where does this project want to go?]
+This New Relic  standalone integration polls the Apache Spark [REST API](https://spark.apache.org/docs/latest/monitoring.html#rest-api) for metrics and pushes them into New Relic  using Metrics API
+It uses the New Relic [Telemetry sdk for go](https://github.com/newrelic/newrelic-telemetry-sdk-go)
 
 ## Installation
 
-> [Include a step-by-step procedure on how to get your code installed. Be sure to include any third-party dependencies that need to be installed separately]
+*Requires Apache Spark runnning in standalone mode (YARN and mesos not yet supported)*
+
+1. Download the latest package from Release.
+2. Install the NR Spark Metric plugin plugin using the following command 
+    > sudo tar -xvzf /tmp/nri-spark-metric.tar.gz -C /
+
+    The following files will be installed 
+    ```
+    /etc/nri-spark-metric/
+    /etc/nri-spark-metric/nr-spark-metric
+    /etc/systemd/system/
+    /etc/systemd/system/nr-spark-metric.service
+    /etc/init/nr-spark-metric.conf
+    ```
+
 
 ## Getting Started
->[Simple steps to start working with the software similar to a "Hello World"]
 
-## Usage
->[**Optional** - Include more thorough instructions on how to use the software. This section might not be needed if the Getting Started section is enough. Remove this section if it's not needed.]
+The integration can be deployed independently on linux 64 system or as a databricks integration using a notebook. The sections below suggests each.
 
 
-## Building
+###### Standalone deployment 
 
->[**Optional** - Include this section if users will need to follow specific instructions to build the software from source. Be sure to include any third party build dependencies that need to be installed separately. Remove this section if it's not needed.]
+1. Create "*nr-spark-metric-settings.yml*" file in the the folder "*/etc/nri-spark-metric/*"  using the following format
+    ```
+    sparkmasterurl: "http://localhost:8080"  <== FQDN ofspark master URL
+    clustername:  mylocalcluster             <== Name of the cluster
+    insightsapikey: xxxx                     <== Insights api key
+    pollinterval: 5                          <== Polling interval
+    ```
+2. Run the following command.
+    > service nr-spark-metric start
 
-## Testing
+3. Check for metrics in "Metric" event type in Insights
 
->[**Optional** - Include instructions on how to run tests if we include tests with the codebase. Remove this section if it's not needed.]
+
+
+
+###### Databricks Init script creator notebook
+
+Use this notebook as a template, update the script to use different versions of integrations available
+
+```
+dbutils.fs.put("dbfs:/nr/nri-spark-metric.sh",""" 
+#!/bin/sh
+echo "Check if this is driver? $DB_IS_DRIVER"
+echo "Spark Driver ip: $DB_DRIVER_IP"
+
+# Create Cluster init script
+cat <<EOF >> /tmp/start_spark-metric.sh
+
+#!/bin/sh
+
+if [ \$DB_IS_DRIVER ]; then
+  # Root user detection
+  if [ \$(echo "$UID") = "0" ];                                      
+  then                                                                     
+    sudo=''                                                                
+  else
+    sudo='sudo'                                                        
+  fi
+
+  #Download nr-spark-metric integration
+  \$sudo wget https://github.com/hsinghkalsi/nr-azure-databricks-config/releases/download/1.0.3/nri-spark-metric.tar.gz  -P /tmp
+
+  #extract the contents to right place
+  \$sudo tar -xvzf /tmp/nri-spark-metric.tar.gz -C /
+
+  # GRAB PORT for masterUI
+   while [ -z \$isavailable ]; do
+    if [ -e "/tmp/master-params" ]; then
+      DB_DRIVER_PORT=\$(cat /tmp/master-params | cut -d' ' -f2)
+      isavailable=TRUE
+    fi
+    sleep 2
+  done
+  
+   # configure spark instances
+  echo "sparkmasterurl: http://\$DB_DRIVER_IP:\$DB_DRIVER_PORT
+clustername: \$DB_CLUSTER_ID
+insightsapikey: <<Add your insights key>>
+pollinterval: 5 " > /etc/nri-spark-metric/nr-spark-metric-settings.yml
+
+   #enable 
+ \$sudo systemctl enable nr-spark-metric.service
+ 
+ #start the service 
+ \$sudo systemctl start nr-spark-metric.service
+ \$sudo start nr-spark-metric
+
+fi
+EOF
+
+# Start 
+if [ \$DB_IS_DRIVER ]; then
+  chmod a+x /tmp/start_spark-metric.sh
+  /tmp/start_spark-metric.sh >> /tmp/start_spark-metric.log 2>&1 & disown
+fi
+
+""",True)
+```
 
 ## Support
 
 New Relic hosts and moderates an online forum where customers can interact with New Relic employees as well as other customers to get help and share best practices. Like all official New Relic open source projects, there's a related Community topic in the New Relic Explorers Hub. You can find this project's topic/threads here:
 
->Add the url for the support thread here
 
 ## Contributing
 We encourage your contributions to improve [project name]! Keep in mind when you submit your pull request, you'll need to sign the CLA via the click-through using CLA-Assistant. You only have to sign the CLA one time per project.
 If you have any questions, or to execute our corporate CLA, required if your contribution is on behalf of a company,  please drop us an email at opensource@newrelic.com.
 
 ## License
-[Project Name] is licensed under the [Apache 2.0](http://apache.org/licenses/LICENSE-2.0.txt) License.
->[If applicable: The [project name] also uses source code from third-party libraries. You can find full details on which libraries are used and the terms under which they are licensed in the third-party notices document.]
+New Relic Infrastructure Integration for Apache Spark is licensed under the [Apache 2.0](http://apache.org/licenses/LICENSE-2.0.txt) License.
+
