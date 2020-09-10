@@ -47,7 +47,13 @@ The integration can be deployed independently on linux 64 system or as a databri
 
 ###### Databricks Init script creator notebook
 
-Use this notebook as a template, update the script to use different versions of integrations available
+
+
+1. Create a new notebook to deploy the cluster intialization script. 
+2. Configure **<NR_WORKING_FOLDER>** with the location to put the init script.
+3. Replace **<NR_LICENSE_KEY>** with your New Relic license.
+4. Run this notebook to create to deploy the new_relic_install.sh script in dbfs in configured folder.
+5. Configure target cluster with the ***newrelic_install.sh*** cluster-scoped init script using the UI, Databricks CLI, or by invoking the Clusters API.
 
 ```
 dbutils.fs.put("dbfs:/nr/nri-spark-metric.sh",""" 
@@ -70,7 +76,8 @@ if [ \$DB_IS_DRIVER ]; then
   fi
 
   #Download nr-spark-metric integration
-  \$sudo wget https://github.com/hsinghkalsi/nr-azure-databricks-config/releases/download/1.0.3/nri-spark-metric.tar.gz  -P /tmp
+  \$sudo wget https://github.com/newrelic-experimental/nri-spark/releases/download/1.0.0/nri-spark-metric.tar.gz  -P /tmp
+
 
   #extract the contents to right place
   \$sudo tar -xvzf /tmp/nri-spark-metric.tar.gz -C /
