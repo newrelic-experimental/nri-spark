@@ -50,10 +50,15 @@ The integration can be deployed independently on linux 64 system or as a databri
 
 
 1. Create a new notebook to deploy the cluster intialization script. 
-2. Configure **<NR_WORKING_FOLDER>** with the location to put the init script.
-3. Replace **<NR_LICENSE_KEY>** with your New Relic license.
+2. Copy the script below in. You only need to make one change (step 3). You do not need to set or touch the $DB_ values in the script, Databricks populates these for us. 
+3. Replace **<Add your insights key>>** with your New Relic Insights Insert Key.
 4. Run this notebook to create to deploy the new_relic_install.sh script in dbfs in configured folder.
-5. Configure target cluster with the ***newrelic_install.sh*** cluster-scoped init script using the UI, Databricks CLI, or by invoking the Clusters API.
+5. Ensure the script is attached to your cluster and is listed in the notebooks of the cluster
+6. Running this script will create the file at dbfs:/nr/nri-spark-metric.sh
+7. Configure target cluster with the ***newrelic_install.sh*** cluster-scoped init script using the UI, Databricks CLI, or by invoking the Clusters API. This setting is found in Cluster configuration tab -> Advanced Options -> Init Scripts
+8. Add dbfs:/nr/nri-spark-metric.sh and click add. 
+9. Restart your cluster
+10. Metrics should start reporting under the Metrics section in New Relic with the prefix of spark.X.X - you should get Job, Stage Executors and Stream metrics.
 
 ```
 dbutils.fs.put("dbfs:/nr/nri-spark-metric.sh",""" 
