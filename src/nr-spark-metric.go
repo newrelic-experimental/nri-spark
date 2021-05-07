@@ -31,10 +31,11 @@ type NewRelic struct {
 
 // ConfigStruct to hold settings required
 type ConfigStruct struct {
-	SparkMasterURL string `yaml:"sparkmasterurl"`
-	ClusterName    string `yaml:"clustername"`
-	InsightsAPIKey string `yaml:"insightsapikey"`
-	PollInterval   int    `yaml:"pollinterval"`
+	SparkMasterURL     string `yaml:"sparkmasterurl"`
+	ClusterName        string `yaml:"clustername"`
+	InsightsAPIKey     string `yaml:"insightsapikey"`
+	MetricsURLOverride string `yaml:"metricsurloverride"`
+	PollInterval       int    `yaml:"pollinterval"`
 }
 
 // ActiveApps  struct which contains list of active apps
@@ -479,7 +480,12 @@ func initHarvestor() error {
 	nr.harvestor, err = telemetry.NewHarvester(telemetry.ConfigAPIKey(configData.InsightsAPIKey),
 		telemetry.ConfigCommonAttributes(map[string]interface{}{
 			"spark.clusterName": configData.ClusterName,
-		}))
+		}),
+		func(cfg *telemetry.Config) {
+			cfg.MetricsURLOverride = configData.MetricsURLOverride
+		},
+	)
+
 	if err != nil {
 		return fmt.Errorf("initHarvestor : unable to connect to newrelic %v", err)
 	}
@@ -510,6 +516,8 @@ func readConfig() error {
 	}
 	log.Info("readConfig : ClusterName :  " + configData.ClusterName)
 	log.Info("readConfig : SparkMasterURL :  " + configData.SparkMasterURL)
+	log.Info("readConfig : MetricsURLOverride :  " + configData.MetricsURLOverride)
+
 	return nil
 }
 
