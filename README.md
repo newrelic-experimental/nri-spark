@@ -36,6 +36,8 @@ The integration can be deployed independently on linux 64 system or as a databri
     clustername:  mylocalcluster             <== Name of the cluster
     insightsapikey: xxxx                     <== Insights api key
     pollinterval: 5                          <== Polling interval
+    workspace: myworkspace-name              <== Name Of Your Databricks Workspace (static value)
+    environment: production                  <== Name Of Your Environment (static value)
     ```
 2. Run the following command.
     > service nr-spark-metric start
@@ -51,7 +53,7 @@ The integration can be deployed independently on linux 64 system or as a databri
 
 1. Create a new notebook to deploy the cluster intialization script. 
 2. Copy the script below in. You only need to make one change (step 3). You do not need to set or touch the $DB_ values in the script, Databricks populates these for us. 
-3. Replace **<Add your insights key>>** with your New Relic Insights Insert Key.
+3. Replace **<Add your insights key>>** with your New Relic Insights Insert Key. You can also adjust Workspace name (If using databricks for a static reference) and environment (production / staging / test) to help you dimensionalise multiple Databricks environments
 4. Run this notebook to create to deploy the new_relic_install.sh script in dbfs in configured folder.
 5. Ensure the script is attached to your cluster and is listed in the notebooks of the cluster
 6. Running this script will create the file at dbfs:/nr/nri-spark-metric.sh
@@ -100,7 +102,9 @@ if [ \$DB_IS_DRIVER ]; then
   echo "sparkmasterurl: http://\$DB_DRIVER_IP:\$DB_DRIVER_PORT
 clustername: \$DB_CLUSTER_ID
 insightsapikey: <<Add your insights key>>
-pollinterval: 5 " > /etc/nri-spark-metric/nr-spark-metric-settings.yml
+pollinterval: 5 
+workspace: myworkspace-name
+environment: production" > /etc/nri-spark-metric/nr-spark-metric-settings.yml
 
    #enable 
  \$sudo systemctl enable nr-spark-metric.service
