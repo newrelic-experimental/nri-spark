@@ -1,6 +1,6 @@
 sparkmasterurl: "http://localhost:8080"
 clustername:  mylocalcluster
-insightsapikey: NRII-Kjscu24il0SaC3GBYmcrd4ogpEnTxfbC	
+insightsapikey: NRII-xxxxxxxxxxxxxxxxx	
 pollinterval: 5
 workspace: myworkspace-name
 environment: production
