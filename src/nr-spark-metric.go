@@ -36,6 +36,8 @@ type ConfigStruct struct {
 	InsightsAPIKey     string `yaml:"insightsapikey"`
 	MetricsURLOverride string `yaml:"metricsurloverride"`
 	PollInterval       int    `yaml:"pollinterval"`
+	Workspace          string `yaml:"workspace"`
+	Environment        string `yaml:"environment"`
 }
 
 // ActiveApps  struct which contains list of active apps
@@ -517,6 +519,8 @@ func readConfig() error {
 	log.Info("readConfig : ClusterName :  " + configData.ClusterName)
 	log.Info("readConfig : SparkMasterURL :  " + configData.SparkMasterURL)
 	log.Info("readConfig : MetricsURLOverride :  " + configData.MetricsURLOverride)
+	log.Info("readConfig : Workspace :  " + configData.Workspace)
+	log.Info("readConfig : Environment :  " + configData.Environment)
 
 	return nil
 }
@@ -542,6 +546,8 @@ func populateSparkMetrics() {
 		tags["spark.app.Submitdate"] = app.Submitdate
 		tags["spark.app.User"] = app.User
 		tags["spark.app.Memoryperslave"] = app.Memoryperslave
+		tags["Environment"] = configData.Environment
+		tags["Workspace"] = configData.Workspace
 		log.Debug("populateSparkMetrics : adding universal tags: ", tags)
 
 		populateJobMetrics(app.ID, appTaskURL, tags)
