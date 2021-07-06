@@ -44,7 +44,10 @@ The integration can be deployed independently on linux 64 system or as a databri
 
 3. Check for metrics in "Metric" event type in Insights
 
-
+4. (Optional) EU region setting: the default region is US. Use this setting to change to EU
+    ````
+    metricsurloverride: https://metric-api.eu.newrelic.com/metric/v1  <== EU region Metric API endpoint
+    ```
 
 
 ###### Databricks Init script creator notebook
@@ -83,7 +86,7 @@ if [ \$DB_IS_DRIVER ]; then
   fi
 
   #Download nr-spark-metric integration
-  \$sudo wget https://github.com/newrelic-experimental/nri-spark/releases/download/1.0.0/nri-spark-metric.tar.gz  -P /tmp
+  \$sudo wget https://github.com/newrelic-experimental/nri-spark/releases/download/1.1.1/nri-spark-metric.tar.gz  -P /tmp
 
 
   #extract the contents to right place
