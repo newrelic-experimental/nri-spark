@@ -1,5 +1,7 @@
 [![Experimental Project header](https://github.com/newrelic/opensource-website/raw/master/src/images/categories/Experimental.png)](https://opensource.newrelic.com/oss-category/#experimental)
 
+<img alt="GitHub all releases" src="https://img.shields.io/github/downloads/newrelic-experimental/nri-spark/total?style=plastic">
+
 # New Relic integration for Apache Spark 
 
 This New Relic  standalone integration polls the Apache Spark [REST API](https://spark.apache.org/docs/latest/monitoring.html#rest-api) for metrics and pushes them into New Relic  using Metrics API
