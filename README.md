@@ -1,6 +1,8 @@
 [![Experimental Project header](https://github.com/newrelic/opensource-website/raw/master/src/images/categories/Experimental.png)](https://opensource.newrelic.com/oss-category/#experimental)
 
-<img alt="GitHub all releases" src="https://img.shields.io/github/downloads/newrelic-experimental/nri-spark/total?style=plastic">
+![GitHub all releases] (https://img.shields.io/github/downloads/newrelic-experimental/nri-spark/total?style=plastic)
+![GitHub issues](https://img.shields.io/github/issues/newrelic-experimental/nri-spark)
+
 <a href="https://github.com/newrelic-experimental/nri-spark">
   <img align="center" src="https://github-readme-stats.vercel.app/api/pin/?username=newrelic-experimental&repo=nri-spark" />
 </a>
