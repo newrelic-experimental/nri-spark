@@ -2,7 +2,7 @@
 
 <img alt="GitHub all releases" src="https://img.shields.io/github/downloads/newrelic-experimental/nri-spark/total?style=plastic">
 <a href="https://github.com/newrelic-experimental/nri-spark">
-  <img align="center" src="https://github-readme-stats.vercel.app/api/pin/?username=hsinghkalsi&repo=newrelic-experimental/nri-spark" />
+  <img align="center" src="https://github-readme-stats.vercel.app/api/pin/?username=newrelic-experimental&repo=nri-spark" />
 </a>
 
 # New Relic integration for Apache Spark 
