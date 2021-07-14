@@ -1,18 +1,20 @@
 [![Experimental Project header](https://github.com/newrelic/opensource-website/raw/master/src/images/categories/Experimental.png)](https://opensource.newrelic.com/oss-category/#experimental)
 
+![GitHub forks](https://img.shields.io/github/forks/newrelic-experimental/nri-spark?style=social)
+![GitHub stars](https://img.shields.io/github/stars/newrelic-experimental/nri-spark?style=social)
+![GitHub watchers](https://img.shields.io/github/watchers/newrelic-experimental/nri-spark?style=social)
+
 ![GitHub all releases](https://img.shields.io/github/downloads/newrelic-experimental/nri-spark/total)
+![GitHub release (latest by date)](https://img.shields.io/github/v/release/newrelic-experimental/nri-spark)
+![GitHub last commit](https://img.shields.io/github/last-commit/newrelic-experimental/nri-spark)
+![GitHub Release Date](https://img.shields.io/github/release-date/newrelic-experimental/nri-spark)
+
+
 ![GitHub issues](https://img.shields.io/github/issues/newrelic-experimental/nri-spark)
 ![GitHub issues closed](https://img.shields.io/github/issues-closed/newrelic-experimental/nri-spark)
 ![GitHub pull requests](https://img.shields.io/github/issues-pr/newrelic-experimental/nri-spark)
 ![GitHub pull requests closed](https://img.shields.io/github/issues-pr-closed/newrelic-experimental/nri-spark)
 
-![GitHub forks](https://img.shields.io/github/forks/newrelic-experimental/nri-spark?style=social)
-![GitHub stars](https://img.shields.io/github/stars/newrelic-experimental/nri-spark?style=social)
-![GitHub watchers](https://img.shields.io/github/watchers/newrelic-experimental/nri-spark?style=social)
-
-![GitHub release (latest by date)](https://img.shields.io/github/v/release/newrelic-experimental/nri-spark)
-![GitHub last commit](https://img.shields.io/github/last-commit/newrelic-experimental/nri-spark)
-![GitHub Release Date](https://img.shields.io/github/release-date/newrelic-experimental/nri-spark)
 
 # New Relic integration for Apache Spark 
 
