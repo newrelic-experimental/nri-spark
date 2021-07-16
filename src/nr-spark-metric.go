@@ -38,6 +38,7 @@ type ConfigStruct struct {
 	PollInterval       int    `yaml:"pollinterval"`
 	Workspace          string `yaml:"workspace"`
 	Environment        string `yaml:"environment"`
+	ClusterMode		   string `yaml:"clustermode"`
 }
 
 // ActiveApps  struct which contains list of active apps
@@ -237,7 +238,36 @@ func GetInnerSubstring(str string, prefix string, suffix string) string {
 	return str[beginIndex:endIndex]
 }
 
-//
+// driver mode intialization
+func initDriver(masterUIURL string, activeAppMap map[string]App) {
+
+	var activeApps ActiveApps
+	masterUIJSONURL := masterUIURL + "/api/v1/applications"
+	log.Debug("initDriver : querying masterUI")
+	byteValue := makeRequest(masterUIJSONURL)
+
+	if byteValue != nil {
+		if err := json.Unmarshal(byteValue, &activeApps); err != nil {
+			log.Fatal("initDriver : unable to get process active apps in json data")
+			//log.Fatal(err)
+		} else {
+			// populate map that contains active app ID and App detail URL
+			log.Debug("initDriver : activeApps ", len(activeApps.ActiveApps))
+
+			for i := 0; i < len(activeApps.ActiveApps); i++ {
+				log.Debug("initDriver : app ID: " + activeApps.ActiveApps[i].ID)
+				log.Debug("initDriver : app name: " + activeApps.ActiveApps[i].Name)
+				appDetailURL := masterUIURL
+				activeAppMap[appDetailURL] = activeApps.ActiveApps[i]
+			}
+		}
+	} else {
+		log.Info("initDriver : unable to get data from " + masterUIJSONURL)
+	}
+
+}
+
+// Standalone intialization
 func initStandalone(masterUIURL string, activeAppMap map[string]App) {
 
 	var activeApps ActiveApps
@@ -247,7 +277,7 @@ func initStandalone(masterUIURL string, activeAppMap map[string]App) {
 
 	if byteValue != nil {
 		if err := json.Unmarshal(byteValue, &activeApps); err != nil {
-			log.Error("initStandalone : unable to get process active apps in json data")
+			log.Fatal("initStandalone : unable to get process active apps in json data")
 			//log.Fatal(err)
 		} else {
 			// populate map that contains active app ID and App detail URL
@@ -266,15 +296,22 @@ func initStandalone(masterUIURL string, activeAppMap map[string]App) {
 
 }
 
+// A
 func getActiveApps(activeAppMap map[string]App) {
 
 	// Get the running apps adn thier Task metrics URL from the master UI
 	var masterUIurl = configData.SparkMasterURL
 
-	// Do first for Standalone.
-	initStandalone(masterUIurl, activeAppMap)
-	//TDB  mesos/YARN
-
+	var clusterMode = configData.ClusterMode 
+	switch clusterMode {
+	case "spark_driver_mode":
+		//driver mode 
+		initDriver(masterUIurl, activeAppMap)
+	default:
+		// Default is standalone mode
+		log.Debug("getActiveApps : Using default cluster mode spark standalone" )
+		initStandalone(masterUIurl, activeAppMap)
+	}
 }
 
 // Populate Job Metrics
@@ -333,6 +370,7 @@ func populateStageMetrics(appID string, appTaskURL string, tags map[string]inter
 
 }
 
+// Populate Executor Metrics
 func populateExecutorMetrics(appID string, appTaskURL string, tags map[string]interface{}) {
 	var sparkExecutors []SparkExecutor
 
@@ -356,6 +394,7 @@ func populateExecutorMetrics(appID string, appTaskURL string, tags map[string]in
 		setMetrics("spark.executor.", e, executortags)
 	}
 }
+// Populate Streaming Metrics
 func populateStreamingMetrics(appID string, appTaskURL string, tags map[string]interface{}) {
 
 	var sparkStreamStats SparkStreamStats
@@ -380,6 +419,7 @@ func populateStreamingMetrics(appID string, appTaskURL string, tags map[string]i
 
 }
 
+// TBD Populate Storage Metrics
 func populateStorageMetrics(activeAppMap map[string]string) {}
 
 func SplitToString(a []int, sep string) string {
@@ -521,6 +561,7 @@ func readConfig() error {
 	log.Info("readConfig : MetricsURLOverride :  " + configData.MetricsURLOverride)
 	log.Info("readConfig : Workspace :  " + configData.Workspace)
 	log.Info("readConfig : Environment :  " + configData.Environment)
+	log.Info("readConfig : ClusterMode :  " + configData.ClusterMode)
 
 	return nil
 }
