@@ -36,9 +36,8 @@ type ConfigStruct struct {
 	InsightsAPIKey     string `yaml:"insightsapikey"`
 	MetricsURLOverride string `yaml:"metricsurloverride"`
 	PollInterval       int    `yaml:"pollinterval"`
-	Workspace          string `yaml:"workspace"`
-	Environment        string `yaml:"environment"`
-	ClusterMode		   string `yaml:"clustermode"`
+	ClusterMode        string `yaml:"clustermode"`
+	Tags               map[string]interface {} `yaml:"tags"`
 }
 
 // ActiveApps  struct which contains list of active apps
@@ -241,24 +240,24 @@ func GetInnerSubstring(str string, prefix string, suffix string) string {
 // driver mode intialization
 func initDriver(masterUIURL string, activeAppMap map[string]App) {
 
-	var activeApps ActiveApps
+	var activeApps []App
 	masterUIJSONURL := masterUIURL + "/api/v1/applications"
 	log.Debug("initDriver : querying masterUI")
 	byteValue := makeRequest(masterUIJSONURL)
 
 	if byteValue != nil {
 		if err := json.Unmarshal(byteValue, &activeApps); err != nil {
-			log.Fatal("initDriver : unable to get process active apps in json data")
+			log.Debug("initDriver : unable to get process active apps in json data")
 			//log.Fatal(err)
 		} else {
 			// populate map that contains active app ID and App detail URL
-			log.Debug("initDriver : activeApps ", len(activeApps.ActiveApps))
+			log.Debug("initDriver : activeApps ", len(activeApps))
 
-			for i := 0; i < len(activeApps.ActiveApps); i++ {
-				log.Debug("initDriver : app ID: " + activeApps.ActiveApps[i].ID)
-				log.Debug("initDriver : app name: " + activeApps.ActiveApps[i].Name)
+			for i := 0; i < len(activeApps); i++ {
+				log.Debug("initDriver : app ID: " + activeApps[i].ID)
+				log.Debug("initDriver : app name: " + activeApps[i].Name)
 				appDetailURL := masterUIURL
-				activeAppMap[appDetailURL] = activeApps.ActiveApps[i]
+				activeAppMap[appDetailURL] = activeApps[i]
 			}
 		}
 	} else {
@@ -539,6 +538,7 @@ func initHarvestor() error {
 //Spark specific helper functions defined below.
 func readConfig() error {
 	viper.SetConfigName("nr-spark-metric-settings")
+	viper.SetConfigType("yaml")
 	if value, exists := os.LookupEnv("NRSPARK_CONFIG"); exists {
 		viper.AddConfigPath(value)
 	} else {
@@ -559,9 +559,8 @@ func readConfig() error {
 	log.Info("readConfig : ClusterName :  " + configData.ClusterName)
 	log.Info("readConfig : SparkMasterURL :  " + configData.SparkMasterURL)
 	log.Info("readConfig : MetricsURLOverride :  " + configData.MetricsURLOverride)
-	log.Info("readConfig : Workspace :  " + configData.Workspace)
-	log.Info("readConfig : Environment :  " + configData.Environment)
 	log.Info("readConfig : ClusterMode :  " + configData.ClusterMode)
+	log.Info("readConfig : Tags :  " ,viper.GetStringMapString("tags"))
 
 	return nil
 }
@@ -587,8 +586,12 @@ func populateSparkMetrics() {
 		tags["spark.app.Submitdate"] = app.Submitdate
 		tags["spark.app.User"] = app.User
 		tags["spark.app.Memoryperslave"] = app.Memoryperslave
-		tags["Environment"] = configData.Environment
-		tags["Workspace"] = configData.Workspace
+		
+		// populate tags from the config file
+		for k, v := range viper.GetStringMapString("tags") { 
+			tags[k] = v
+		}
+
 		log.Debug("populateSparkMetrics : adding universal tags: ", tags)
 
 		populateJobMetrics(app.ID, appTaskURL, tags)
