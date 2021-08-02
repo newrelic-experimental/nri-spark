@@ -52,8 +52,10 @@ The integration can be deployed independently on linux 64 system or as a databri
     clustername:  mylocalcluster             <== Name of the cluster
     insightsapikey: xxxx                     <== Insights api key
     pollinterval: 5                          <== Polling interval
-    workspace: myworkspace-name              <== Name Of Your Databricks Workspace (static value)
-    environment: production                  <== Name Of Your Environment (static value)
+    clustermode:                             <== Set mode to *spark_driver_mode* for Single Node clusters
+    tags:                                    <== Additonal tags to be added to metrics
+      nr_sample_tag_org: newrelic_labs
+      nr_sample_tag_practice: odp
     ```
 2. Run the following command.
     > service nr-spark-metric start
@@ -65,18 +67,20 @@ The integration can be deployed independently on linux 64 system or as a databri
 
 ###### Databricks Init script creator notebook
 
+>**This notebook and configuration is for reference purpose only, deployment should customize this to fulfill the needs**
 
 
 1. Create a new notebook to deploy the cluster intialization script. 
-2. Copy the script below in. You only need to make one change (step 3). You do not need to set or touch the $DB_ values in the script, Databricks populates these for us. 
-3. Replace **<Add your insights key>>** with your New Relic Insights Insert Key. You can also adjust Workspace name (If using databricks for a static reference) and environment (production / staging / test) to help you dimensionalise multiple Databricks environments
-4. Run this notebook to create to deploy the new_relic_install.sh script in dbfs in configured folder.
-5. Ensure the script is attached to your cluster and is listed in the notebooks of the cluster
-6. Running this script will create the file at dbfs:/nr/nri-spark-metric.sh
-7. Configure target cluster with the ***newrelic_install.sh*** cluster-scoped init script using the UI, Databricks CLI, or by invoking the Clusters API. This setting is found in Cluster configuration tab -> Advanced Options -> Init Scripts
-8. Add dbfs:/nr/nri-spark-metric.sh and click add. 
-9. Restart your cluster
-10. Metrics should start reporting under the Metrics section in New Relic with the prefix of spark.X.X - you should get Job, Stage Executors and Stream metrics.
+2. Copy the script below in. You do not need to set or touch the $DB_ values in the script, Databricks populates these for us. 
+3. Replace **<Add your insights key>>** with your New Relic Insights Insert Key. 
+4. Add/Remove/Update tags require in the tag section, sample tags are configured using *nr_sample_tag\** 
+5. Run this notebook to create to deploy the new_relic_install.sh script in dbfs in configured folder.
+6. Ensure the script is attached to your cluster and is listed in the notebooks of the cluster
+7. Running this script will create the file at dbfs:/nr/nri-spark-metric.sh
+8. Configure target cluster with the ***newrelic_install.sh*** cluster-scoped init script using the UI, Databricks CLI, or by invoking the Clusters API. This setting is found in Cluster configuration tab -> Advanced Options -> Init Scripts
+9. Add dbfs:/nr/nri-spark-metric.sh and click add. 
+10. Restart your cluster
+11. Metrics should start reporting under the Metrics section in New Relic with the prefix of spark.X.X - you should get Job, Stage Executors and Stream metrics.
 
 ```
 dbutils.fs.put("dbfs:/nr/nri-spark-metric.sh",""" 
@@ -84,7 +88,7 @@ dbutils.fs.put("dbfs:/nr/nri-spark-metric.sh","""
 echo "Check if this is driver? $DB_IS_DRIVER"
 echo "Spark Driver ip: $DB_DRIVER_IP"
 
-# Create Cluster init script
+#Create Cluster init script
 cat <<EOF >> /tmp/start_spark-metric.sh
 
 #!/bin/sh
@@ -97,35 +101,52 @@ if [ \$DB_IS_DRIVER ]; then
   else
     sudo='sudo'                                                        
   fi
-
-  #Download nr-spark-metric integration
-  \$sudo wget https://github.com/newrelic-experimental/nri-spark/releases/download/1.0.0/nri-spark-metric.tar.gz  -P /tmp
-
-
-  #extract the contents to right place
-  \$sudo tar -xvzf /tmp/nri-spark-metric.tar.gz -C /
-
-  # GRAB PORT for masterUI
-   while [ -z \$isavailable ]; do
-    if [ -e "/tmp/master-params" ]; then
-      DB_DRIVER_PORT=\$(cat /tmp/master-params | cut -d' ' -f2)
-      isavailable=TRUE
-    fi
-    sleep 2
-  done
   
-   # configure spark instances
-  echo "sparkmasterurl: http://\$DB_DRIVER_IP:\$DB_DRIVER_PORT
-clustername: \$DB_CLUSTER_ID
-insightsapikey: <<Add your insights key>>
-pollinterval: 5 
-workspace: myworkspace-name
-environment: production" > /etc/nri-spark-metric/nr-spark-metric-settings.yml
+  echo "Check if this is driver? $DB_IS_DRIVER"
+  echo "Spark Driver ip: $DB_DRIVER_IP"
 
-   #enable 
+#Download nr-spark-metric integration
+  \$sudo wget https://github.com/newrelic-experimental/nri-spark/releases/download/1.2.0/nri-spark-metric.tar.gz  -P /tmp
+
+
+#Extract the contents to right place
+  \$sudo tar -xvzf /tmp/nri-spark-metric.tar.gz -C /
+  
+  # Check which mode is the cluster running in  
+  if grep 'spark.databricks.cluster.profile singleNode' /tmp/custom-spark.conf ; then
+    echo '  > SingleNodeCluster, using "spark_driver_mode"'
+    DB_DRIVER_PORT=\$(grep -i "CONF_UI_PORT" /tmp/driver-env.sh | cut -d'=' -f2)
+    SPARK_CLUSTER_MODE='spark_driver_mode'
+  else
+    echo '  > Normal cluster, using "spark_standalone_mode", waiting for master-params...'
+    while [ -z \$is_available ]; do
+      if [ -e "/tmp/master-params" ]; then
+        DB_DRIVER_PORT=\$(cat /tmp/master-params | cut -d' ' -f2)
+        SPARK_CLUSTER_MODE=''
+        is_available=TRUE
+      fi
+      sleep 2
+    done
+  fi
+  
+#Configure nr-spark-metric-settings.yml file 
+
+  echo "sparkmasterurl: http://\$DB_DRIVER_IP:\$DB_DRIVER_PORT
+clustername: \$DB_CLUSTER_NAME
+insightsapikey: NRII-73FiPsC7mSdvMNAS1_oBjFGjzJbSKvE0	
+pollinterval: 5
+clustermode: \$SPARK_CLUSTER_MODE
+tags:
+  nr_sample_tag_org: newrelic_labs
+  nr_sample_tag_practice: odp" > /etc/nri-spark-metric/nr-spark-metric-settings.yml
+
+  echo ' > Configured  nr-spark-metric-settings.yml \n $(</etc/nri-spark-metric/nr-spark-metric-settings.yml)'
+
+#Enable the service
  \$sudo systemctl enable nr-spark-metric.service
- 
- #start the service 
+
+  #Start the service 
+  
  \$sudo systemctl start nr-spark-metric.service
  \$sudo start nr-spark-metric
 
