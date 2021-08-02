@@ -53,7 +53,7 @@ The integration can be deployed independently on linux 64 system or as a databri
     insightsapikey: xxxx                     <== Insights api key
     pollinterval: 5                          <== Polling interval
     clustermode:                             <== Set mode to *spark_driver_mode* for Single Node clusters
-    tags:                                    <== Additonal tags to be added to metrics
+    tags:                                    <== Additional tags to be added to metrics
       nr_sample_tag_org: newrelic_labs
       nr_sample_tag_practice: odp
     ```
