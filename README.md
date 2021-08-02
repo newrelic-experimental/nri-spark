@@ -133,7 +133,7 @@ if [ \$DB_IS_DRIVER ]; then
 
   echo "sparkmasterurl: http://\$DB_DRIVER_IP:\$DB_DRIVER_PORT
 clustername: \$DB_CLUSTER_NAME
-insightsapikey: NRII-73FiPsC7mSdvMNAS1_oBjFGjzJbSKvE0	
+insightsapikey: NRII-XXXXXXXXXXXXXXXX	
 pollinterval: 5
 clustermode: \$SPARK_CLUSTER_MODE
 tags:
