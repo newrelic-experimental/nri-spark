@@ -39,7 +39,7 @@ It uses the New Relic [Telemetry sdk for go](https://github.com/newrelic/newreli
     ```
 
 
-## Getting Started
+## Installation
 
 The integration can be deployed independently on linux 64 system or as a databricks integration using a notebook. The sections below suggests each.
 
@@ -70,17 +70,18 @@ The integration can be deployed independently on linux 64 system or as a databri
 >**This notebook and configuration is for reference purpose only, deployment should customize this to fulfill the needs**
 
 
-1. Create a new notebook to deploy the cluster intialization script. 
-2. Copy the script below in. You do not need to set or touch the $DB_ values in the script, Databricks populates these for us. 
-3. Replace **<Add your insights key>>** with your New Relic Insights Insert Key. 
-4. Add/Remove/Update tags require in the tag section, sample tags are configured using *nr_sample_tag\** 
-5. Run this notebook to create to deploy the new_relic_install.sh script in dbfs in configured folder.
-6. Ensure the script is attached to your cluster and is listed in the notebooks of the cluster
-7. Running this script will create the file at dbfs:/nr/nri-spark-metric.sh
-8. Configure target cluster with the ***newrelic_install.sh*** cluster-scoped init script using the UI, Databricks CLI, or by invoking the Clusters API. This setting is found in Cluster configuration tab -> Advanced Options -> Init Scripts
-9. Add dbfs:/nr/nri-spark-metric.sh and click add. 
-10. Restart your cluster
-11. Metrics should start reporting under the Metrics section in New Relic with the prefix of spark.X.X - you should get Job, Stage Executors and Stream metrics.
+1. Create a new notebook to deploy the cluster intialization script 
+2. Copy the relevant script below. You do not need to set or touch the $DB_ values in the script, Databricks populates these for us. 
+   a Based on cluster install mode, comment/uncommment  Standalone Cluster / SingleNodeCluster install 
+4. Replace **<Add your insights key>>** with your New Relic Insights Insert Key. 
+5. Add/Remove/Update tags require in the tag section, sample tags are configured using *nr_sample_tag\** 
+6. Run this notebook to create to deploy the new_relic_install.sh script in dbfs in configured folder.
+7. Ensure the script is attached to your cluster and is listed in the notebooks of the cluster
+8. Running this script will create the file at dbfs:/nr/nri-spark-metric.sh
+9. Configure target cluster with the ***newrelic_install.sh*** cluster-scoped init script using the UI, Databricks CLI, or by invoking the Clusters API. This setting is found in Cluster configuration tab -> Advanced Options -> Init Scripts
+10. Add dbfs:/nr/nri-spark-metric.sh and click add. 
+11. Restart your cluster
+12. Metrics should start reporting under the Metrics section in New Relic with the prefix of spark.X.X - you should get Job, Stage Executors and Stream metrics.
 
 ```
 dbutils.fs.put("dbfs:/nr/nri-spark-metric.sh",""" 
@@ -113,12 +114,14 @@ if [ \$DB_IS_DRIVER ]; then
   \$sudo tar -xvzf /tmp/nri-spark-metric.tar.gz -C /
   
   # Check which mode is the cluster running in  
-  if grep 'spark.databricks.cluster.profile singleNode' /tmp/custom-spark.conf ; then
-    echo '  > SingleNodeCluster, using "spark_driver_mode"'
-    DB_DRIVER_PORT=\$(grep -i "CONF_UI_PORT" /tmp/driver-env.sh | cut -d'=' -f2)
-    SPARK_CLUSTER_MODE='spark_driver_mode'
-  else
-    echo '  > Normal cluster, using "spark_standalone_mode", waiting for master-params...'
+  # Start of  SingleNodeCluster install , using "spark_driver_mode"', uncomment this section and comment out Standalone cluster
+  #  echo '  > SingleNodeCluster, using "spark_driver_mode"'
+  #  DB_DRIVER_PORT=\$(grep -i "CONF_UI_PORT" /tmp/driver-env.sh | cut -d'=' -f2)
+  #  SPARK_CLUSTER_MODE='spark_driver_mode'
+  # end of SingleNodeCluster install
+    
+  # Start of Standalone Cluster, use the below section 
+    echo '  > Standalone cluster, using "spark_standalone_mode", waiting for master-params...'
     while [ -z \$is_available ]; do
       if [ -e "/tmp/master-params" ]; then
         DB_DRIVER_PORT=\$(cat /tmp/master-params | cut -d' ' -f2)
@@ -127,7 +130,7 @@ if [ \$DB_IS_DRIVER ]; then
       fi
       sleep 2
     done
-  fi
+  # end of Standalone Cluster section
   
 #Configure nr-spark-metric-settings.yml file 
 
