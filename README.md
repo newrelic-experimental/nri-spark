@@ -72,7 +72,8 @@ The integration can be deployed independently on linux 64 system or as a databri
 
 1. Create a new notebook to deploy the cluster intialization script 
 2. Copy the relevant script below. You do not need to set or touch the $DB_ values in the script, Databricks populates these for us. 
-   a Based on cluster install mode, comment/uncommment  Standalone Cluster / SingleNodeCluster install 
+   a Optional : Based on cluster install mode, uncommment  SingleNodeCluster install , comment Standalone
+   b Optional : Install infra agent, update with latest version
 4. Replace **<Add your insights key>>** with your New Relic Insights Insert Key. 
 5. Add/Remove/Update tags require in the tag section, sample tags are configured using *nr_sample_tag\** 
 6. Run this notebook to create to deploy the new_relic_install.sh script in dbfs in configured folder.
@@ -105,6 +106,16 @@ if [ \$DB_IS_DRIVER ]; then
   
   echo "Check if this is driver? $DB_IS_DRIVER"
   echo "Spark Driver ip: $DB_DRIVER_IP"
+    
+  # Optional install infra agent
+    
+  # echo "license_key: <<NR LICENSE KEY>>" | \$sudo tee -a /etc/newrelic-infra.yml         
+  ##Download upstart based installer to /tmp. # update the linke with new relases
+  #\$sudo wget https://download.newrelic.com/infrastructure_agent/linux/apt/pool/main/n/newrelic-infra/newrelic-infra_upstart_1.3.27_upstart_amd64.deb -P /tmp
+  #\$sudo wget https://download.newrelic.com/infrastructure_agent/linux/apt/pool/main/n/newrelic-infra/newrelic-infra_upstart_1.9.0_upstart_amd64.deb -P /tmp
+  ## Install NR Agent
+  #\$sudo dpkg -i /tmp/newrelic-infra_upstart_1.3.27_upstart_amd64.deb
+    
 
 #Download nr-spark-metric integration
   \$sudo wget https://github.com/newrelic-experimental/nri-spark/releases/download/1.2.0/nri-spark-metric.tar.gz  -P /tmp
