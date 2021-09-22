@@ -87,8 +87,8 @@ The integration can be deployed independently on linux 64 system or as a databri
 ```
 dbutils.fs.put("dbfs:/nr/nri-spark-metric.sh",""" 
 #!/bin/sh
-echo "Check if this is driver? $DB_IS_DRIVER"
-echo "Spark Driver ip: $DB_DRIVER_IP"
+echo ">>> Check if this is driver? $DB_IS_DRIVER"
+echo ">>> Spark Driver ip: $DB_DRIVER_IP"
 
 #Create Cluster init script
 cat <<EOF >> /tmp/start_spark-metric.sh
@@ -104,24 +104,51 @@ if [ \$DB_IS_DRIVER ]; then
     sudo='sudo'                                                        
   fi
   
-  echo "Check if this is driver? $DB_IS_DRIVER"
-  echo "Spark Driver ip: $DB_DRIVER_IP"
+  echo ">>> Check if this is driver? $DB_IS_DRIVER"
+  echo ">>> Spark Driver ip: $DB_DRIVER_IP"
     
-  # Optional install infra agent
-    
-  # echo "license_key: <<NR LICENSE KEY>>" | \$sudo tee -a /etc/newrelic-infra.yml         
-  ##Download upstart based installer to /tmp. # update the linke with new relases
-  #\$sudo wget https://download.newrelic.com/infrastructure_agent/linux/apt/pool/main/n/newrelic-infra/newrelic-infra_upstart_1.3.27_upstart_amd64.deb -P /tmp
-  #\$sudo wget https://download.newrelic.com/infrastructure_agent/linux/apt/pool/main/n/newrelic-infra/newrelic-infra_upstart_1.9.0_upstart_amd64.deb -P /tmp
-  ## Install NR Agent
-  #\$sudo dpkg -i /tmp/newrelic-infra_upstart_1.3.27_upstart_amd64.deb
-    
+# Optional install infra agent
+  # Add license key 
+  echo "license_key: <<NR LICENCE KEY >>" | \$sudo tee -a /etc/newrelic-infra.yml         
+ 
+  #Determine OS version. Assuming this is Ubuntu
+  OS_VERSION=\$(grep VERSION_ID /etc/os-release | cut -d = -f 2 | xargs echo | cut -d "." -f 1)
+  echo ">>> OS_VERSION: \$OS_VERSION"
+  
+  #add Newrelic GPG key 
+  \$sudo curl -s https://download.newrelic.com/infrastructure_agent/gpg/newrelic-infra.gpg | sudo apt-key add -
+ 
+  #Add the infrastructure monitoring agent repository, midify this if OS version changes
+  if [ \$OS_VERSION = "18" ];
+  then 
+    echo ">>> Bionic release"
+    \$sudo printf "deb https://download.newrelic.com/infrastructure_agent/linux/apt bionic main" | sudo tee -a /etc/apt/sources.list.d/newrelic-infra.list
+  else
+    echo ">>> Other release, customize script"
+  fi
+ 
+  #Refresh repos 
+  \$sudo apt-get update
 
-#Download nr-spark-metric integration
-  \$sudo wget https://github.com/newrelic-experimental/nri-spark/releases/download/1.2.0/nri-spark-metric.tar.gz  -P /tmp
+ #install newreli-infra
+ \$sudo apt-get install newrelic-infra -y
 
+ ## adding logs configuration 
+    echo "logs:
+  - name: databricks.\$DB_CLUSTER_NAME
+    file: /databricks/driver/logs/*.log
+    attributes:
+      entity: databricks
+      clustername: \$DB_CLUSTER_NAME
+      IP: $DB_DRIVER_IP" > /etc/newrelic-infra/logging.d/spark.yml
 
-#Extract the contents to right place
+# end of infra agent install   
+
+# Install nr-spark-metric integration
+   #Download nr-spark-metric integration
+  \$sudo wget https://github.com/hsinghkalsi/nri-spark/releases/download/1.2.0/nri-spark-metric.tar.gz -P /tmp
+
+  #Extract the contents to right place
   \$sudo tar -xvzf /tmp/nri-spark-metric.tar.gz -C /
   
   # Check which mode is the cluster running in  
@@ -132,6 +159,7 @@ if [ \$DB_IS_DRIVER ]; then
   # end of SingleNodeCluster install
     
   # Start of Standalone Cluster, use the below section 
+  # Identify driver port in standalone mode 
     echo '  > Standalone cluster, using "spark_standalone_mode", waiting for master-params...'
     while [ -z \$is_available ]; do
       if [ -e "/tmp/master-params" ]; then
@@ -143,7 +171,7 @@ if [ \$DB_IS_DRIVER ]; then
     done
   # end of Standalone Cluster section
   
-#Configure nr-spark-metric-settings.yml file 
+  # Configure nr-spark-metric-settings.yml file 
 
   echo "sparkmasterurl: http://\$DB_DRIVER_IP:\$DB_DRIVER_PORT
 clustername: \$DB_CLUSTER_NAME
@@ -154,7 +182,7 @@ tags:
   nr_sample_tag_org: newrelic_labs
   nr_sample_tag_practice: odp" > /etc/nri-spark-metric/nr-spark-metric-settings.yml
 
-  echo ' > Configured  nr-spark-metric-settings.yml \n $(</etc/nri-spark-metric/nr-spark-metric-settings.yml)'
+  echo ' >>> Configured  nr-spark-metric-settings.yml \n $(</etc/nri-spark-metric/nr-spark-metric-settings.yml)'
 
 #Enable the service
  \$sudo systemctl enable nr-spark-metric.service
