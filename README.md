@@ -138,6 +138,7 @@ if [ \$DB_IS_DRIVER ]; then
   - name: databricks.\$DB_CLUSTER_NAME
     file: /databricks/driver/logs/*.log
     attributes:
+      nrlabs: data
       entity: databricks
       clustername: \$DB_CLUSTER_NAME
       IP: $DB_DRIVER_IP" > /etc/newrelic-infra/logging.d/spark.yml
